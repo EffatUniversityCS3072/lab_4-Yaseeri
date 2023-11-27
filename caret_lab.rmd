@@ -1,7 +1,9 @@
 ---
 title: "CARET_Lab"
-output: html_document
-date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    latex_engine: xelatex
+date: "27/11/2023"
 ---
 
 ```{r setup, include=FALSE}
@@ -26,17 +28,38 @@ You need to split the loaded dataset into two, 80% of which we will use to train
 Hint: use createDataPartition function
 ```{r}
 
+# Create the training and test datasets
+set.seed(100)
+
+# Step 1: Get row numbers for the training data
+trainRowNumbers <- createDataPartition(dataset$Species, p=0.8, list=FALSE)
+
+# Step 2: Create the training  dataset
+trainData <- dataset[trainRowNumbers,]
+
+# Step 3: Create the test dataset
+testData <- dataset[-trainRowNumbers,]
+
 ```
 
 Task2: Summarize Dataset
 Use skimr library to summarize the dataset
 ```{r}
 
+library(skimr)
+skimmed <- skim_to_wide(trainData)
+
+skimmed
+
 ```
 
 Task3: split input and output
  It is the time to seperate the input attributes and  the output attributes. call the inputs attributes x and the output attribute (or class) y.
 ```{r}
+
+# Store X and Y for later use.
+x = trainData[, 1:4]
+y = trainData[, 5]
 
 ```
 
@@ -52,33 +75,119 @@ metric <- "Accuracy"
 Task5: Model Training
 Train 5 different algorithms using 'train' function:
 
-- Linear Discriminant Analysis (LDA)
+- Linear Discriminant Analysis (LDA).
 - Classification and Regression Trees (CART).
 - k-Nearest Neighbors (kNN).
 - Support Vector Machines (SVM) with a linear kernel.
-- Random Forest (RF)
+- Random Forest (RF).
 
+# Linear Discriminant Analysis (LDA).
 ```{r}
 
+# Set the seed for reproducibility
+set.seed(100)
+
+# Train the model using LDA
+model_LDA = train(Species ~ ., data=trainData, method = 'lda',  trControl = control, metric = metric)
+
+model_LDA
 
 ```
+# Classification and Regression Trees (CART).
+```{r}
 
+# Set the seed for reproducibility
+set.seed(100)
+
+# Train the model using CART
+model_CART = train(Species ~ ., data=trainData, method = 'rpart',  trControl = control, metric = metric)
+
+model_CART
+
+```
+# k-Nearest Neighbors (kNN).
+```{r}
+
+# Set the seed for reproducibility
+set.seed(100)
+
+# Train the model using kNN
+model_KNN = train(Species ~ ., data=trainData, method = 'knn',  trControl = control, metric = metric)
+
+model_KNN
+
+```
+# Support Vector Machines (SVM) with a linear kernel.
+```{r}
+
+# Set the seed for reproducibility
+set.seed(100)
+
+# Train the model using SVM
+model_SVM = train(Species ~ ., data=trainData, method = 'svmRadial',  trControl = control, metric = metric)
+
+model_SVM
+
+```
+# Random Forest (RF).
+```{r}
+
+# Set the seed for reproducibility
+set.seed(100)
+
+# Random Forest (RF)
+model_RF = train(Species ~ ., data=trainData, method = 'rf',  trControl = control, metric = metric)
+
+model_RF
+
+```
 Task6: Select the Best Model
 We now have 5 models and accuracy estimations for each. We need to compare the models to each other and select the most accurate.
 Use resamples function to complete this task
 
 ```{r}
 
+#Compare all 5 using resample
+
+models_compare <- resamples(list(LDA = model_LDA, CART = model_CART, KNN = model_KNN, SVMLinear = model_SVM, RF = model_RF))
+
+summary(models_compare)
 
 ```
 What was the most accurate model?
+The most accurate model was the KNN model with 98.33% accuracy.
 
 
 Task7: Make Prediction (Confusion Matrix)
 Now we want to get an idea of the accuracy of the best model on our validation set. Use 'predict' and confusionMatrix functions to complete this task.
 
+# LDA Confusion Matrix & Prediction
 ```{r}
+predicted <- predict(model_LDA, testData)
+confusionMatrix(reference = testData$Species, data = predicted)
+```
 
+# CART Confusion Matrix & Prediction
+```{r}
+predicted <- predict(model_CART, testData)
+confusionMatrix(reference = testData$Species, data = predicted)
+```
 
+# KNN Confusion Matrix & Prediction
+```{r}
+predicted <- predict(model_KNN, testData)
+confusionMatrix(reference = testData$Species, data = predicted)
+```
+
+# SVM Confusion Matrix & Prediction
+```{r}
+predicted <- predict(model_SVM, testData)
+confusionMatrix(reference = testData$Species, data = predicted)
+```
+
+# RF Confusion Matrix & Prediction
+```{r}
+predicted <- predict(model_RF, testData)
+confusionMatrix(reference = testData$Species, data = predicted)
 ```
 
